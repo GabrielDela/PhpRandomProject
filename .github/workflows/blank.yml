@@ -9,7 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup SSH
         run: |
@@ -17,16 +18,17 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 37.59.108.141 >> ~/.ssh/known_hosts
-          ssh-keygen -y -f ~/.ssh/id_ed25519
 
       - name: Test SSH
         run: |
           ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes ubuntu@37.59.108.141 "whoami"
 
-      - name: Deploy
+      - name: Deploy to server
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
             --exclude='.git' \
             --exclude='.github' \
+            --exclude='hls/' \
+            --exclude='*.log' \
             ./ ubuntu@37.59.108.141:/var/www/html/
